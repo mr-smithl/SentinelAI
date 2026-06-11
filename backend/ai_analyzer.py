@@ -26,8 +26,8 @@ def _time_risk(hour: int) -> float:
     if hour in NIGHT_HOURS:
         return 1.0
     if 6 <= hour < 18:
-        return 0.45
-    return 0.72
+        return 0.5
+    return 0.75
 
 
 def _classify_intrusion(score: float, signals: List[str]) -> str:
@@ -100,16 +100,17 @@ def analyze_intrusion(
     if motion_detected or event == "motion_detected":
         active_signals.append("motion")
         sensor_scores["motion"] = SENSOR_WEIGHTS["motion_detected"]
-    if light_level > 400 or event == "light_intrusion":
+    if light_level > 200 or event == "light_intrusion":  # Lowered threshold for real LDR data
         active_signals.append("light")
-        sensor_scores["light"] = SENSOR_WEIGHTS["light_intrusion"] * min(light_level / 900, 1.0)
+        light_intensity = min(light_level / 500, 1.0)  # Normalize to 0-1 range
+        sensor_scores["light"] = SENSOR_WEIGHTS["light_intrusion"] * light_intensity
     if flame_detected or event == "flame_ir":
         active_signals.append("ir_flame")
         sensor_scores["ir_flame"] = SENSOR_WEIGHTS["flame_ir"]
-    if temp_c >= 80 or event == "overheat":
+    if temp_c >= 70 or event == "overheat":  # Lowered from 80 for better detection
         active_signals.append("overheat")
         sensor_scores["overheat"] = SENSOR_WEIGHTS["overheat"]
-    elif temp_c >= 65 or event == "overheat_warn":
+    elif temp_c >= 55 or event == "overheat_warn":  # Lowered from 65 for earlier warning
         sensor_scores["thermal"] = SENSOR_WEIGHTS["overheat_warn"]
 
     # Recent event memory boosts correlated intrusion patterns
@@ -147,6 +148,7 @@ def analyze_intrusion(
         except Exception:
             pass
 
+    # Ensure fractional probability with one decimal place
     probability = round(min(base + geo_boost, 1.0) * 100, 1)
 
     factors: List[str] = []

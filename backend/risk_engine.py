@@ -115,7 +115,7 @@ def calculate_sensor_risk(
     if event in event_floors and time_mult >= 0.75:
         score = max(score, event_floors[event])
 
-    score_pct = round(min(max(score, 0.0), 1.0) * 100)
+    score_pct = round(min(max(score, 0.0), 1.0) * 100, 1)
 
     if score_pct >= 85:
         risk_level = "CRITICAL"

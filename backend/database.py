@@ -14,7 +14,7 @@ from backend.stations import STATUS_NORMAL, flatten_stations
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "sentinel.db"
 
 MONITORED_NODE = "TRANSFORMER-001"
-MONITORED_SITE = "john-ware-substation"
+MONITORED_SITE = "johannesburg-city-power-john-ware-substation"  # Updated to match prefixed ID format
 
 
 def init_db() -> None:
@@ -161,7 +161,13 @@ def resolve_site_id(asset_id: str) -> str:
         row = conn.execute(
             "SELECT id FROM sites WHERE sensor_node_id = ? LIMIT 1", (asset_id,)
         ).fetchone()
-    return row["id"] if row else MONITORED_SITE
+        if row:
+            return row["id"]
+        # Fallback: if asset_id not found, try the configured monitored node id
+        row2 = conn.execute(
+            "SELECT id FROM sites WHERE sensor_node_id = ? LIMIT 1", (MONITORED_NODE,)
+        ).fetchone()
+    return row2["id"] if row2 else MONITORED_SITE
 
 
 def update_site_status(site_id: str, status: str, risk_score: int) -> None:

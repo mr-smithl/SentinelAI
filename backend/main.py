@@ -145,15 +145,15 @@ def process_sensor_event(data: Dict[str, Any]) -> Dict[str, Any]:
         recent_events=list(recent_event_buffer),
     )
 
-    # AI fusion can elevate status for compound intrusions
+    # AI fusion can elevate status for compound intrusions — preserve fractional scores
     if ai["intrusion_probability"] >= 85:
         risk["status"] = "HIGH RISK"
         risk["risk_level"] = "CRITICAL"
-        risk["risk_score"] = max(risk["risk_score"], int(ai["intrusion_probability"]))
+        risk["risk_score"] = max(risk["risk_score"], ai["intrusion_probability"])
     elif ai["intrusion_probability"] >= 65:
         risk["status"] = "ALERT"
         risk["risk_level"] = "HIGH"
-        risk["risk_score"] = max(risk["risk_score"], int(ai["intrusion_probability"]))
+        risk["risk_score"] = max(risk["risk_score"], ai["intrusion_probability"])
 
     if maintenance:
         risk["status"] = "MAINTENANCE"
@@ -396,9 +396,11 @@ async def simulate_scenario(body: SimulateRequest) -> Dict[str, Any]:
     if body.scenario not in scenarios:
         raise HTTPException(400, f"Choose: {list(scenarios)}")
 
+    # Prefer an explicit site_id from the request; otherwise resolve the monitored node id
+    default_site = resolve_site_id("TRANSFORMER-001")
     payload = {
         "asset_id": "TRANSFORMER-001",
-        "site_id": body.site_id or "john-ware-substation",
+        "site_id": body.site_id or default_site,
         **scenarios[body.scenario],
     }
     result = process_sensor_event(payload)

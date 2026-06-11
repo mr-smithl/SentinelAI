@@ -1,10 +1,10 @@
 export const STATUS_COLORS = {
-  NORMAL: { fill: '#1D9E75', ring: '#0F6E56', label: 'Normal' },
-  SUSPICIOUS: { fill: '#D4A017', ring: '#BA7517', label: 'Suspicious' },
-  ALERT: { fill: '#E67E22', ring: '#CA6F1E', label: 'Alert' },
-  'HIGH RISK': { fill: '#E24B4A', ring: '#A32D2D', label: 'High Risk' },
-  CRITICAL: { fill: '#C0392B', ring: '#922B21', label: 'Critical' },
-  MAINTENANCE: { fill: '#7C6BDB', ring: '#534AB7', label: 'Maintenance' },
+  NORMAL: { fill: '#10B981', ring: '#059669', label: 'Normal' },
+  SUSPICIOUS: { fill: '#F59E0B', ring: '#D97706', label: 'Suspicious' },
+  ALERT: { fill: '#EF4444', ring: '#DC2626', label: 'Alert' },
+  'HIGH RISK': { fill: '#DC2626', ring: '#991B1B', label: 'High Risk' },
+  CRITICAL: { fill: '#7F1D1D', ring: '#450A0A', label: 'Critical' },
+  MAINTENANCE: { fill: '#8B5CF6', ring: '#6D28D9', label: 'Maintenance' },
 }
 
 export const statusBadge = {

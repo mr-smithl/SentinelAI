@@ -13,6 +13,8 @@ export default function InfrastructureMap({ stations, height = '520px', onSelect
         className="h-full w-full"
         scrollWheelZoom
         zoomControl
+        maxBounds={[[ -27.5, 27.0 ], [ -25.0, 29.5 ]]}
+        maxBoundsViscosity={0.8}
       >
         <ScaleControl position="bottomleft" />
         <LayersControl position="topright">
