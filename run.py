@@ -21,4 +21,9 @@ if __name__ == "__main__":
         print("Dashboard: http://127.0.0.1:8000")
     else:
         print("Dashboard dev: cd frontend && npm run dev  →  http://localhost:5173")
-    uvicorn.run("backend.main:app", host=host, port=port, reload=False)
+    try:
+        uvicorn.run("backend.main:app", host=host, port=port, reload=False)
+    except OSError as exc:
+        print(f"Failed to bind {host}:{port}: {exc}")
+        print("Confirm no other SentinelAI process is running, or set SENTINEL_PORT to a different port.")
+        sys.exit(1)

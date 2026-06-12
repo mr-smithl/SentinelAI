@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 EVENT_WEIGHTS: Dict[str, float] = {
     "door_open": 0.35,
     "light_intrusion": 0.30,
+    "motion_detected": 0.32,
     "flame_ir": 0.20,
     "overheat": 0.25,
     "overheat_warn": 0.10,
@@ -83,6 +84,8 @@ def calculate_sensor_risk(
         factors.append("Cabinet door opened outside maintenance window")
     if event == "light_intrusion":
         factors.append(f"Light spike detected (level {light_level}) during sensitive hours")
+    if event == "motion_detected":
+        factors.append("PIR motion sensor triggered in secured zone")
     if flame_detected or event == "flame_ir":
         factors.append("IR/flame sensor triggered — torch or heat source")
     if temp_c >= 80:
@@ -106,6 +109,7 @@ def calculate_sensor_risk(
         "overheat": 0.90,
         "door_open": 0.78,
         "light_intrusion": 0.72,
+        "motion_detected": 0.74,
         "flame_ir": 0.58,
     }
     if event in event_floors and time_mult >= 0.75:

@@ -1,0 +1,390 @@
+{
+  "gauteng_power_grid": {
+    "power_stations": [
+      {
+        "name": "Kelvin Power Station",
+        "type": "Coal-Fired Thermal",
+        "region": "Ekurhuleni / JHB Border",
+        "coordinates": { "latitude": -26.1136, "longitude": 28.1925 }
+      },
+      {
+        "name": "Rooiwal Power Station",
+        "type": "Coal-Fired Municipal",
+        "region": "Tshwane",
+        "coordinates": { "latitude": -25.5539, "longitude": 28.2325 }
+      },
+      {
+        "name": "Pretoria West Power Station",
+        "type": "Coal-Fired Municipal",
+        "region": "Tshwane",
+        "coordinates": { "latitude": -25.7564, "longitude": 28.1464 }
+      },
+      {
+        "name": "Lethabo Power Station",
+        "type": "Coal-Fired Base Load (Eskom)",
+        "region": "Vaal River Border (Free State side, feeds Emfuleni)",
+        "coordinates": { "latitude": -26.7419, "longitude": 27.9775 }
+      },
+      {
+        "name": "Robinson Deep Plant",
+        "type": "Landfill Gas-to-Energy",
+        "region": "Johannesburg Central",
+        "coordinates": { "latitude": -26.2261, "longitude": 28.0494 }
+      },
+      {
+        "name": "Marie Louise Plant",
+        "type": "Landfill Gas-to-Energy",
+        "region": "Johannesburg West",
+        "coordinates": { "latitude": -26.2089, "longitude": 27.8864 }
+      },
+      {
+        "name": "Linbro Park Plant",
+        "type": "Landfill Gas-to-Energy",
+        "region": "Johannesburg East",
+        "coordinates": { "latitude": -26.0822, "longitude": 28.1189 }
+      },
+      {
+        "name": "Leeuwkuil Waste-to-Energy Plant",
+        "type": "Biogas / Municipal Waste",
+        "region": "Vereeniging",
+        "coordinates": { "latitude": -26.6853, "longitude": 27.8986 }
+      },
+      {
+        "name": "Vaal Reefs Private Mining Generation",
+        "type": "Co-generation / Deep Level Mine Hydro",
+        "region": "Greater Vaal Mining Belt",
+        "coordinates": { "latitude": -26.7042, "longitude": 27.8681 }
+      }
+    ],
+    "substations": {
+      "eskom_bulk_transmission": [
+        {
+          "name": "Apollo Converter Station",
+          "voltage": "HVDC 533kV / 400kV",
+          "region": "Ekurhuleni (Midrand)",
+          "coordinates": { "latitude": -25.9183, "longitude": 28.2789 }
+        },
+        {
+          "name": "Glockner Substation",
+          "voltage": "400kV / 275kV / 132kV",
+          "region": "Rothdene / Meyerton Border",
+          "coordinates": { "latitude": -26.6111, "longitude": 27.9870 }
+        },
+        {
+          "name": "Minerva Substation",
+          "voltage": "400kV / 275kV",
+          "region": "Johannesburg North",
+          "coordinates": { "latitude": -25.9614, "longitude": 28.1481 }
+        },
+        {
+          "name": "Omega Substation",
+          "voltage": "400kV / 132kV",
+          "region": "Tshwane South",
+          "coordinates": { "latitude": -25.9221, "longitude": 28.1122 }
+        },
+        {
+          "name": "Jupiter Substation",
+          "voltage": "275kV / 132kV",
+          "region": "Ekurhuleni (Germiston)",
+          "coordinates": { "latitude": -26.2169, "longitude": 28.1472 }
+        },
+        {
+          "name": "Elandsfontein Substation",
+          "voltage": "275kV / 132kV",
+          "region": "Ekurhuleni (East Rand)",
+          "coordinates": { "latitude": -26.1731, "longitude": 28.2394 }
+        },
+        {
+          "name": "Westgate Substation",
+          "voltage": "275kV / 132kV",
+          "region": "West Rand (Roodepoort)",
+          "coordinates": { "latitude": -26.1669, "longitude": 27.8542 }
+        },
+        {
+          "name": "Scafell Substation",
+          "voltage": "275kV",
+          "region": "Vaal Barrage Rural Edge",
+          "coordinates": { "latitude": -26.8132, "longitude": 27.6371 }
+        },
+        {
+          "name": "Makalu Substation",
+          "voltage": "275kV",
+          "region": "Sasolburg Border Link",
+          "coordinates": { "latitude": -26.8231, "longitude": 27.9101 }
+        },
+        {
+          "name": "Highveld Substation",
+          "voltage": "275kV Link",
+          "region": "Vaal Industrial Corridor",
+          "coordinates": { "latitude": -26.9189, "longitude": 27.8929 }
+        },
+        {
+          "name": "Lethabo Bulk Link",
+          "voltage": "400kV",
+          "region": "Sedibeng (Vereeniging)",
+          "coordinates": { "latitude": -26.6853, "longitude": 27.9625 }
+        },
+        {
+          "name": "Carbo Substation",
+          "voltage": "132kV Bulk Supply",
+          "region": "Vanderbijlpark Industrial",
+          "coordinates": { "latitude": -26.6542, "longitude": 27.8189 }
+        },
+        {
+          "name": "Mesa Substation",
+          "voltage": "132kV",
+          "region": "Johannesburg South",
+          "coordinates": { "latitude": -26.2917, "longitude": 27.9856 }
+        }
+      ],
+      "johannesburg_city_power": [
+        {
+          "name": "John Ware Substation",
+          "region": "Fordsburg",
+          "coordinates": { "latitude": -26.2081, "longitude": 28.0242 }
+        },
+        {
+          "name": "Cydna Substation",
+          "region": "Melrose / Rosebank",
+          "coordinates": { "latitude": -26.1408, "longitude": 28.0642 }
+        },
+        {
+          "name": "Delta Substation",
+          "region": "Craighall Park",
+          "coordinates": { "latitude": -26.1158, "longitude": 28.0122 }
+        },
+        {
+          "name": "Bryanston Substation",
+          "region": "Bryanston",
+          "coordinates": { "latitude": -26.0464, "longitude": 28.0197 }
+        },
+        {
+          "name": "Marlboro Substation",
+          "region": "Marlboro / Alexandra",
+          "coordinates": { "latitude": -26.0841, "longitude": 28.0936 }
+        },
+        {
+          "name": "Rosebank Substation",
+          "region": "Rosebank Central",
+          "coordinates": { "latitude": -26.1469, "longitude": 28.0414 }
+        },
+        {
+          "name": "Bellevue Substation",
+          "region": "Observatory",
+          "coordinates": { "latitude": -26.1824, "longitude": 28.0747 }
+        },
+        {
+          "name": "Wilropark Substation",
+          "region": "Roodepoort",
+          "coordinates": { "latitude": -26.1182, "longitude": 27.8461 }
+        },
+        {
+          "name": "Windsor Substation",
+          "region": "Randburg",
+          "coordinates": { "latitude": -26.1165, "longitude": 27.9681 }
+        },
+        {
+          "name": "Peter Road Substation",
+          "region": "Ruimsig",
+          "coordinates": { "latitude": -26.0792, "longitude": 27.8719 }
+        },
+        {
+          "name": "Mondeor Substation",
+          "region": "Mondeor",
+          "coordinates": { "latitude": -26.2753, "longitude": 28.0064 }
+        },
+        {
+          "name": "Mulbarton Substation",
+          "region": "Mulbarton",
+          "coordinates": { "latitude": -26.2894, "longitude": 28.0481 }
+        },
+        {
+          "name": "Hursthill Substation",
+          "region": "Hursthill / Brixton",
+          "coordinates": { "latitude": -26.1897, "longitude": 28.0014 }
+        },
+        {
+          "name": "Fordsburg Substation",
+          "region": "Fordsburg Industrial",
+          "coordinates": { "latitude": -26.2114, "longitude": 28.0211 }
+        },
+        {
+          "name": "Orlando Substation",
+          "region": "Soweto East",
+          "coordinates": { "latitude": -26.2483, "longitude": 27.9272 }
+        },
+        {
+          "name": "Diepkloof Substation",
+          "region": "Soweto / Diepkloof",
+          "coordinates": { "latitude": -26.2428, "longitude": 27.9547 }
+        },
+        {
+          "name": "Princess Substation",
+          "region": "Witpoortjie",
+          "coordinates": { "latitude": -26.1558, "longitude": 27.8422 }
+        },
+        {
+          "name": "Sunninghill Substation",
+          "region": "Sunninghill",
+          "coordinates": { "latitude": -26.0271, "longitude": 28.0714 }
+        }
+      ],
+      "tshwane_municipal_distribution": [
+        {
+          "name": "Kwagga Substation",
+          "region": "Pretoria West",
+          "coordinates": { "latitude": -25.7628, "longitude": 28.1219 }
+        },
+        {
+          "name": "Centurion Central Substation",
+          "region": "Centurion CBD",
+          "coordinates": { "latitude": -25.8569, "longitude": 28.1814 }
+        },
+        {
+          "name": "Aries Substation",
+          "region": "Waterkloof Ridge",
+          "coordinates": { "latitude": -25.7994, "longitude": 28.2436 }
+        },
+        {
+          "name": "Pyramid Substation",
+          "region": "Rooiwal / Pretoria North",
+          "coordinates": { "latitude": -25.5681, "longitude": 28.2167 }
+        },
+        {
+          "name": "Kentron Substation",
+          "region": "Centurion Industrial",
+          "coordinates": { "latitude": -25.8753, "longitude": 28.1611 }
+        },
+        {
+          "name": "Rua Vista Substation",
+          "region": "Centurion West",
+          "coordinates": { "latitude": -25.9014, "longitude": 28.1189 }
+        },
+        {
+          "name": "Boom Substation",
+          "region": "Pretoria CBD",
+          "coordinates": { "latitude": -25.7397, "longitude": 28.1856 }
+        },
+        {
+          "name": "Mamelodi Substation",
+          "region": "Mamelodi East",
+          "coordinates": { "latitude": -25.7144, "longitude": 28.3756 }
+        },
+        {
+          "name": "Soshanguve Substation",
+          "region": "Soshanguve",
+          "coordinates": { "latitude": -25.5233, "longitude": 28.0944 }
+        },
+        {
+          "name": "Rosslyn Substation",
+          "region": "Rosslyn Industrial",
+          "coordinates": { "latitude": -25.6231, "longitude": 28.0811 }
+        },
+        {
+          "name": "Faerie Glen Substation",
+          "region": "Pretoria East",
+          "coordinates": { "latitude": -25.7825, "longitude": 28.3094 }
+        },
+        {
+          "name": "Hatfield Substation",
+          "region": "Hatfield",
+          "coordinates": { "latitude": -25.7481, "longitude": 28.2386 }
+        }
+      ],
+      "ekurhuleni_municipal_distribution": [
+        {
+          "name": "Alberton Main Substation",
+          "region": "Alberton",
+          "coordinates": { "latitude": -26.2594, "longitude": 28.1256 }
+        },
+        {
+          "name": "Boksburg Main Substation",
+          "region": "Boksburg CBD",
+          "coordinates": { "latitude": -26.2211, "longitude": 28.2589 }
+        },
+        {
+          "name": "Benoni Substation",
+          "region": "Benoni",
+          "coordinates": { "latitude": -26.1894, "longitude": 28.3183 }
+        },
+        {
+          "name": "Brakpan Substation",
+          "region": "Brakpan",
+          "coordinates": { "latitude": -26.2369, "longitude": 28.3697 }
+        },
+        {
+          "name": "Springs Main Substation",
+          "region": "Springs",
+          "coordinates": { "latitude": -26.2514, "longitude": 28.4322 }
+        },
+        {
+          "name": "Kempton Park Substation",
+          "region": "Kempton Park",
+          "coordinates": { "latitude": -26.1044, "longitude": 28.2319 }
+        }
+      ],
+      "emfuleni_municipal_distribution": [
+        {
+          "name": "Vanderbijlpark Main Substation",
+          "region": "Vanderbijlpark CBD",
+          "coordinates": { "latitude": -26.7114, "longitude": 27.8381 }
+        },
+        {
+          "name": "Vereeniging Main Substation",
+          "region": "Vereeniging CBD",
+          "coordinates": { "latitude": -26.6739, "longitude": 27.9317 }
+        },
+        {
+          "name": "Sebokeng Main Substation",
+          "region": "Sebokeng Zone 10",
+          "coordinates": { "latitude": -26.5783, "longitude": 27.8422 }
+        },
+        {
+          "name": "Evaton Central Substation",
+          "region": "Evaton North",
+          "coordinates": { "latitude": -26.5314, "longitude": 27.8594 }
+        },
+        {
+          "name": "Sharpeville Substation",
+          "region": "Sharpeville",
+          "coordinates": { "latitude": -26.6897, "longitude": 27.8647 }
+        },
+        {
+          "name": "Duncanville Substation",
+          "region": "Duncanville Industrial",
+          "coordinates": { "latitude": -26.6492, "longitude": 27.9256 }
+        },
+        {
+          "name": "Powerville Substation",
+          "region": "Powerville Commercial Zone",
+          "coordinates": { "latitude": -26.6725, "longitude": 27.9058 }
+        },
+        {
+          "name": "Iscor Main Substation",
+          "region": "Vanderbijlpark Steel Works (Mittal)",
+          "coordinates": { "latitude": -26.6611, "longitude": 27.8094 }
+        },
+        {
+          "name": "Bedworth Park Substation",
+          "region": "Bedworth Park / Vaal University",
+          "coordinates": { "latitude": -26.7194, "longitude": 27.8767 }
+        },
+        {
+          "name": "Three Rivers Substation",
+          "region": "Three Rivers East",
+          "coordinates": { "latitude": -26.6661, "longitude": 27.9653 }
+        },
+        {
+          "name": "Sonlandpark Substation",
+          "region": "Sonland Park",
+          "coordinates": { "latitude": -26.6139, "longitude": 27.9156 }
+        },
+        {
+          "name": "Arcon Park Substation",
+          "region": "Arcon Park",
+          "coordinates": { "latitude": -26.6344, "longitude": 27.9389 }
+        }
+      ]
+    }
+  }
+}

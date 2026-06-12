@@ -1,387 +1,243 @@
-# SentinelAI
+<p align="center">
+  <strong style="font-size:2rem">SentinelAI</strong><br/>
+  <em>Predict · Protect · Prevent</em>
+</p>
 
-> Predict. Protect. Prevent.
+<p align="center">
+  An AI-powered infrastructure protection platform for Gauteng's power network — detecting cable theft,
+  substation intrusion, and transformer faults through Arduino sensor nodes, multi-signal fusion,
+  and role-specific dashboards for security companies and utility operators.
+</p>
 
-An AI-powered infrastructure protection system that helps government departments detect, predict, and prevent theft and vandalism of critical public infrastructure using Arduino-based sensor nodes, real-time monitoring, and predictive analytics.
-
----
-
-## Problem Statement
-
-Infrastructure theft and vandalism continue to impact service delivery across South Africa.
-
-Critical infrastructure such as:
-
-- Electrical transformers
-- Substations
-- Traffic light control boxes
-- Water pump stations
-- Clinics
-- Schools
-- Government facilities
-
-are frequently targeted, resulting in:
-
-- Power outages
-- Water disruptions
-- Increased maintenance costs
-- Delayed service delivery
-- Financial losses
-
-Current security systems are largely reactive.
-
-SentinelAI aims to shift from reactive response to proactive prevention.
+<p align="center">
+  <strong>Gauteng G13 Hackathon</strong> · Intelligent Infrastructure Protection System
+</p>
 
 ---
 
-## Project Goals
+## Overview
 
-### Early Threat Detection
-Detect suspicious activity around government infrastructure in real time.
+South Africa's public infrastructure — transformers, substations, cable vaults, and distribution nodes — is a high-value target for theft and vandalism. **SentinelAI** shifts security from reactive response to **proactive, AI-informed prevention**.
 
-### Predictive Prevention
-Use Artificial Intelligence to identify infrastructure at risk before incidents occur.
+The platform combines:
 
-### Rapid Response
-Automatically notify the appropriate response teams.
-
-### Infrastructure Visibility
-Provide centralized monitoring and reporting capabilities.
-
-### Data-Driven Decisions
-Generate insights to improve security planning and resource allocation.
+- **Edge sensor nodes** (Arduino Uno) monitoring temperature, light, door/tamper, motion, and IR
+- **AI fusion engine** correlating multi-sensor patterns against time-of-day and geographic risk
+- **Dual stakeholder portals** — one for private security dispatch, one for municipal/Eskom operations
+- **Live Gauteng infrastructure map** with all facilities from `power-stations.json`, color-coded by real-time status
 
 ---
 
-## Key Features
+## Dual Portal Architecture
 
-### Smart Sensor Monitoring
+| Portal | Audience | Receives |
+|--------|----------|----------|
+| **Security Operations Center** (`/security`) | Private security & rapid response | Door/tamper, motion, light intrusion, IR alerts · AI break-in probability · dispatch notifications |
+| **Utility Operations** (`/operations`) | Municipal / Eskom maintenance teams | Transformer overheating, thermal warnings, maintenance mode, asset health notices |
 
-Arduino-based sensor nodes monitor infrastructure using:
+Notifications route automatically:
 
-- PIR Motion Sensors
-- Vibration Sensors
-- Tamper Detection Sensors
-- GPS Modules (Optional)
-- Temperature Sensors (Future)
-
----
-
-### Real-Time Alerts
-
-Receive alerts via:
-
-- Web Dashboard
-- SMS
-- WhatsApp
-- Email
+- `SENTINEL_SECURITY_EMAIL` — security company inbox
+- `SENTINEL_OPERATIONS_EMAIL` — utility operations inbox
+- Console logging always active for demo
 
 ---
 
-### AI Risk Scoring
+## AI Intrusion Analysis
 
-The system analyzes:
+The **AI Fusion Engine** (`backend/ai_analyzer.py`) ingests all sensor channels simultaneously:
 
-- Motion activity
-- Vibration activity
-- Time of day
-- Historical incidents
-- Infrastructure location
+| Signal | Weight | Detects |
+|--------|--------|---------|
+| Door / tamper | 28% | Unauthorized cabinet access |
+| PIR motion | 26% | Movement in secured perimeter |
+| Light (LDR) | 22% | Torches, headlights at night |
+| IR / flame | 12% | Heat sources near cables |
+| Temperature | 8% | Transformer thermal faults |
 
-to calculate a threat score.
+The engine also detects **compound patterns** — e.g. night + door + light/motion matching typical cable theft MO — and blends **geographic baseline risk** from `Agent.py`.
 
-Example:
+How AI analyzes each event:
+- Inputs are fused from door/tamper, motion, light, flame/IR, and temperature signals.
+- Temporal context is considered through the recent event buffer, which highlights repeated patterns over the last 12 events.
+- The analyzer combines signal weights, anomaly thresholds, and location-specific risk factors to compute an intrusion probability.
+- The resulting score is mapped into status bands such as NORMAL, ALERT, HIGH RISK, and MAINTENANCE.
+- Site risk is enriched with geographic context, so critical substations and busy urban areas produce more meaningful actionable alerts.
 
-```text
-Asset: Transformer-001
-
-Motion Detected: Yes
-Vibration Detected: High
-Time: 02:13 AM
-
-Risk Score: 94%
-Status: HIGH RISK
-```
-
-### Infrastructure Risk Map
-
-Visualize:
-
-- High-risk zones
-- Infrastructure locations
-- Active incidents
-- Historical theft patterns
+Output per event:
+- Intrusion probability (0–100%)
+- Threat classification
+- Confidence score
+- Active signal breakdown
+- Recommended action (dispatch / monitor / maintenance)
 
 ---
 
-### Incident Management
+## Live Infrastructure Map
 
-Track incidents from detection to resolution.
+All Gauteng power stations and substations are loaded from **`power-stations.json`**:
 
-Statuses:
+- Kelvin, Rooiwal, Pretoria West power stations
+- Eskom transmission substations (Apollo, Minerva, Craighall, Jupiter)
+- Municipal distribution nodes (John Ware, Cydna, Delta, Kwagga, Centurion Central)
 
-- Open
-- Assigned
-- In Progress
-- Resolved
+**Map features:**
+- OpenStreetMap & satellite base layers
+- Custom SVG icons per facility type (power station / substation / monitored node)
+- Status color coding with pulse rings on active threats
+- Threat radius circles around alerting sites
 
----
-
-### Predictive Analytics
-
-The AI engine predicts:
-
-- Theft hotspots
-- High-risk infrastructure
-- Repeat offender patterns
-- Recommended patrol locations
-
----
-
-### Asset Health Monitoring
-
-Monitor infrastructure condition and detect:
-
-- Excessive vibration
-- Repeated tampering
-- Environmental anomalies
-
----
-
-### AI Assistant
-
-Generate:
-
-- Risk assessments
-- Monthly reports
-- Incident summaries
-- Security recommendations
+| Status | Color | Meaning |
+|--------|-------|---------|
+| NORMAL | Green | All sensors nominal |
+| SUSPICIOUS | Amber | Anomaly detected |
+| ALERT | Orange | Active threat signal |
+| HIGH RISK | Red | Multi-sensor intrusion pattern |
+| MAINTENANCE | Purple | Authorized maintenance window |
 
 ---
 
 ## System Architecture
 
-```text
-PIR Motion Sensor
-        |
-Vibration Sensor
-        |
-     Arduino
-        |
- WiFi / GSM Module
-        |
-    Backend API
-        |
-    PostgreSQL
-        |
-   AI Engine
-        |
- Dashboard & Alerts
-        |
- Security Teams
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Arduino Sensor Node (John Ware Substation)                 │
+│  MLX90614 · LDR · Reed Switch · PIR · IR · Buzzer · LEDs   │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ USB Serial / JSON (115200 baud)
+┌──────────────────────────▼──────────────────────────────────┐
+│  FastAPI Backend                                            │
+│  ├─ Serial Bridge        ├─ AI Fusion Engine                │
+│  ├─ Risk Scoring         ├─ SQLite Persistence              │
+│  ├─ Role Notifications   └─ WebSocket Live Feed             │
+└────────────┬─────────────────────────────┬──────────────────┘
+             │                             │
+   ┌─────────▼─────────┐         ┌─────────▼─────────┐
+   │ Security Portal   │         │ Operations Portal │
+   │ /security         │         │ /operations       │
+   └───────────────────┘         └───────────────────┘
 ```
 
 ---
 
-## Hardware Components
+## Quick Start
 
-### Prototype Hardware
+### Prerequisites
 
-- Arduino Uno / Nano
-- PIR Motion Sensor
-- SW-420 Vibration Sensor
-- GSM Module (SIM800L)
-- ESP8266 WiFi Module
-- LEDs
-- Buzzer
-- Breadboard
-- Jumper Wires
+- Python 3.10+
+- Node.js 18+
+- Arduino Uno (optional for live demo)
 
----
+### Install & run
 
-## Software Stack
+```bash
+# Backend
+pip install -r requirements.txt
 
-### Frontend
+# Frontend
+cd frontend && npm install && npm run build && cd ..
 
-- React.js
-- Tailwind CSS
-- Leaflet Maps
+# Start (API + dashboard on port 8000)
+python run.py
+```
 
-### Backend
+| URL | Description |
+|-----|-------------|
+| http://127.0.0.1:8000 | Portal selector |
+| http://127.0.0.1:8000/security | Security company dashboard |
+| http://127.0.0.1:8000/operations | Utility operations dashboard |
+| http://127.0.0.1:8000/docs | API documentation |
 
-- FastAPI (Python)
+### Development mode
 
-### Database
+```bash
+python run.py                          # Terminal 1 — API
+cd frontend && npm run dev               # Terminal 2 — hot reload at :5173
+```
 
-- PostgreSQL
+### Arduino setup
 
-### AI & Analytics
+See [`arduino/README.md`](arduino/README.md). Upload `arduino/sentinel_node/sentinel_node.ino`, connect via USB — the backend auto-detects the COM port.
 
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
+### Environment variables (optional)
 
-### Notifications
-
-- SMS Gateway
-- WhatsApp API
-- Email Service
-
----
-
-## AI Integration
-
-### Threat Classification
-
-Classifies activity as:
-
-- Normal
-- Suspicious
-- High Risk
+```bash
+SENTINEL_SECURITY_EMAIL=security@company.co.za
+SENTINEL_OPERATIONS_EMAIL=ops@citypower.gov.za
+SENTINEL_SMTP_HOST=smtp.gmail.com
+SENTINEL_SMTP_USER=your@email.com
+SENTINEL_SMTP_PASS=app-password
+SENTINEL_USE_SERIAL=1
+SENTINEL_SERIAL_PORT=COM3
+```
 
 ---
 
-### Predictive Risk Analysis
+## API Highlights
 
-Predicts:
-
-- Infrastructure likely to be targeted
-- High-risk locations
-- Time-based attack patterns
-
----
-
-### Response Recommendations
-
-Suggests:
-
-- Closest response team
-- Priority level
-- Recommended action
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/stations` | All facilities with live status for map |
+| `GET /api/alerts?audience=security` | Filtered alerts per portal |
+| `GET /api/notifications/{audience}` | Dispatch / operations notification feed |
+| `POST /api/ai/analyze` | Run AI fusion on sensor snapshot |
+| `POST /api/simulate` | Demo scenarios without hardware |
+| `POST /api/maintenance` | Toggle maintenance mode per site |
+| `WS /ws` | Real-time event stream |
 
 ---
 
-## User Roles
+## Hardware
 
-### Security Officer
+| Component | Pin | Role |
+|-----------|-----|------|
+| Reed switch | D2 | Door / tamper |
+| Flame / IR | D3 | IR intrusion |
+| LDR | A0 | Light / torch |
+| MLX90614 | I2C A4/A5 | Transformer temperature |
+| Buzzer | D8 | Local alarm |
+| LEDs | D9, D10 | Status indicators |
 
-- View alerts
-- Update incidents
-- Monitor infrastructure status
+**Buzzer patterns:** 1× door · 2× light · 3× overheat · 4× IR
 
-### Infrastructure Manager
-
-- View reports
-- Monitor assets
-- Analyze trends
-
-### Government Administrator
-
-- Monitor all assets
-- Review analytics
-- Generate reports
+Full wiring guide: [`TEAM.md`](TEAM.md) · Component inventory: [`component_map.html`](component_map.html)
 
 ---
 
-## Example Workflow
+## Project Structure
 
-1. Motion detected near a transformer.
-2. Vibration sensor detects tampering.
-3. Arduino sends sensor data to the backend.
-4. AI calculates a risk score.
-5. Alert is generated.
-6. Security team is notified.
-7. Incident is tracked until resolution.
-
----
-
-## Future Enhancements
-
-- Computer Vision Detection
-- LoRaWAN Connectivity
-- Drone Surveillance Integration
-- Predictive Maintenance
-- Multi-Department Infrastructure Monitoring
-- Smart City Integration
-
----
-
-## Expected Impact
-
-- Reduced infrastructure theft
-- Faster response times
-- Improved service delivery
-- Lower maintenance costs
-- Better resource allocation
-- Increased public safety
+```
+SentinelAI/
+├── arduino/sentinel_node/     # Firmware
+├── backend/
+│   ├── main.py                # FastAPI application
+│   ├── ai_analyzer.py         # Multi-sensor AI fusion
+│   ├── risk_engine.py         # Threat scoring
+│   ├── stations.py            # power-stations.json loader
+│   ├── database.py            # SQLite persistence
+│   └── notifier.py            # Role-based notifications
+├── frontend/src/
+│   ├── pages/                 # Landing, Security, Operations portals
+│   └── components/            # Map, AI insights
+├── power-stations.json        # Gauteng facility coordinates
+├── Agent.py                   # Geographic crime risk context
+├── TEAM.md                    # 5-person team roles
+└── run.py                     # Entry point
+```
 
 ---
 
 ## Team
 
-Developed for the Gauteng G13 Hackathon.
-
-### SentinelAI
-**Intelligent Infrastructure Protection System**
+| Members | Focus |
+|---------|-------|
+| 3 × Hardware | Arduino wiring, sensor calibration, demo rig |
+| 2 × Software | Backend API, dual dashboards, AI integration |
 
 ---
 
-## Quick Start (Hackathon Demo)
+## License & Context
 
-### Who does what?
+Built for the **Gauteng G13 Hackathon** to demonstrate how IoT edge sensing and AI fusion can protect critical public infrastructure and reduce service delivery disruption from theft and vandalism.
 
-See **[TEAM.md](TEAM.md)** for the full 5-person split (3 hardware + 2 software) and the 5-minute demo script.
-
-Open **[component_map.html](component_map.html)** in a browser for the component inventory and pin map.
-
-### Run the full stack (one laptop)
-
-```bash
-# 1. Backend dependencies
-pip install -r requirements.txt
-
-# 2. Build dashboard
-cd frontend
-npm install
-npm run build
-cd ..
-
-# 3. Start server (serves API + dashboard on port 8000)
-python run.py
-```
-
-Open **http://127.0.0.1:8000** — use the demo buttons if Arduino is not connected.
-
-### With Arduino connected
-
-1. Upload `arduino/sentinel_node/sentinel_node.ino` (see `arduino/README.md`)
-2. Plug Arduino into the same laptop via USB
-3. Start with serial enabled (default):
-
-```bash
-python run.py
-```
-
-The backend auto-detects the COM port and ingests JSON from the serial monitor.
-
-### Dev mode (hot reload dashboard)
-
-```bash
-# Terminal 1
-python run.py
-
-# Terminal 2
-cd frontend && npm run dev
-```
-
-Dashboard: http://localhost:5173 · API docs: http://127.0.0.1:8000/docs
-
-### Sensor → alert mapping
-
-| Sensor | Threat | Buzzer |
-|--------|--------|--------|
-| Reed switch | Cabinet door opened | 1 beep |
-| LDR light | Torch / headlights at night | 2 beeps |
-| MLX90614 | Transformer overheating (>80°C) | 3 beeps |
-| Flame/IR module | Bright IR / heat source | 4 beeps |
+**SentinelAI** — *Intelligent Infrastructure Protection System*
