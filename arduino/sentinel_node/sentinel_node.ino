@@ -1,241 +1,181 @@
 /*
- * SentinelAI — Infrastructure Theft Detection Node
- * Gauteng G13 Hackathon
- *
- * Sensors:
- *   - MLX90614 IR temperature (I2C) — transformer overheating
- *   - LDR light module (A0) — unexpected light at night (torch/headlights)
- *   - Flame/IR module (D3) — sudden IR/light spike
- *   - Reed switch (D2) — cabinet door open
- *   - Buzzer (D8) — local alarm with distinct patterns
- *   - Status LEDs (D9 normal, D10 alert)
- *
- * Serial output: one JSON line per reading + immediate event lines.
- * Commands (115200 baud): MAINTENANCE_ON | MAINTENANCE_OFF | CALIBRATE
- */
+ ═══════════════════════════════════════════════════════════════
+   SentinelAI — Arduino sketch (4-pin KY-026 version)
 
-#include <Wire.h>
-#include <Adafruit_MLX90614.h>
+   YOUR EXACT KIT:
+     KY-026 Flame sensor (4 pins: VCC · GND · DO · AO)
+       DO  → D2  (digital interrupt — instant fire alert)
+       AO  → A1  (analog 0–1023 — flame intensity for score)
+     Reed switch module (3 pins: VCC · GND · S)
+       S   → D3  (tamper: magnet removed = HIGH)
+     KY-018 LDR (3 pins: VCC · GND · S)
+       S   → A0  (cover disc = darkness = intruder)
+     KY-012 Buzzer (3 pins: VCC · GND · S)
+       S   → D7
+     Yellow LED alert   → D8  (+ 220Ω to GND)
+     Yellow LED status  → D9  (+ 220Ω to GND)
+     Arduino Uno        → USB to laptop
 
-// ── Pin map (matches component_map.html) ──────────────────────────────────
-#define PIN_REED_SWITCH   2
-#define PIN_FLAME_DIGITAL 3
-#define PIN_LDR_ANALOG    A0
-#define PIN_BUZZER        8
-#define PIN_LED_NORMAL    9
-#define PIN_LED_ALERT     10
+   HOW TO TRIGGER EACH ALERT FOR DEMO:
+     Fire/heat  → Wave hand near KY-026 IR eye (or lighter)
+     Door tamper→ Pull magnet away from reed switch module
+     Intruder   → Cover the LDR disc fully with your thumb
 
-// ── Thresholds (tune on site) ───────────────────────────────────────────────
-#define TEMP_ALERT_C        80.0f   // transformer surface overheating
-#define TEMP_WARN_C         65.0f
-#define LIGHT_NIGHT_BASELINE 120    // ADC 0-1023 — calibrate with CALIBRATE cmd
-#define LIGHT_SPIKE_DELTA    180    // sudden increase triggers alert
-#define FLAME_TRIGGER_LOW    LOW    // most modules pull LOW when flame/light detected
-#define REED_DOOR_OPEN       HIGH   // magnet present = LOW, door open = HIGH
+   Output: JSON on Serial 9600 baud → serial_bridge.py
+ ═══════════════════════════════════════════════════════════════
+*/
 
-#define READ_INTERVAL_MS    1000
-#define DEBOUNCE_MS         800
-#define SERIAL_BAUD         115200
+// ── PINS ─────────────────────────────────────────────────────────
+#define PIN_FLAME_DO   2    // KY-026 digital out  (LOW = flame!)
+#define PIN_REED       3    // Reed switch          (HIGH = tamper)
+#define PIN_FLAME_AO   A1   // KY-026 analog out    (0=bright flame, 1023=none)
+#define PIN_LDR        A0   // KY-018 LDR           (low = dark = intruder)
+#define PIN_BUZZER     7    // KY-012 active buzzer
+#define PIN_LED_ALERT  8    // Yellow LED — alert flash
+#define PIN_LED_STATUS 9    // Yellow LED — status on = online
 
-Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+// ── NODE IDENTITY ─────────────────────────────────────────────────
+#define NODE_ID    "NODE-01"
+#define LOCATION   "Transformer-001, Solland Substation, Vereeniging, Gauteng"
 
-bool maintenanceMode = false;
-bool mlxAvailable = false;
+// ── THRESHOLDS ────────────────────────────────────────────────────
+// LDR: lower reading = darker = suspicious
+// Open Serial Monitor and read A0 value in normal light, then set
+// threshold at ~60% of that value. Typical: 600-700 in normal light.
+#define LDR_DARK_THRESHOLD  700
 
-unsigned long lastReadMs = 0;
-unsigned long lastReedChangeMs = 0;
-unsigned long lastLightSpikeMs = 0;
-unsigned long lastTempAlertMs = 0;
-unsigned long lastFlameAlertMs = 0;
+// Cooldown: min milliseconds between alerts of same type
+#define COOLDOWN_MS  15000UL
 
-bool doorOpen = false;
-bool alertActive = false;
+// ── STATE ─────────────────────────────────────────────────────────
+volatile bool flameFired = false;   // set by interrupt
+unsigned long lastFlame  = 0;
+unsigned long lastReed   = 0;
+unsigned long lastLDR    = 0;
+unsigned long lastHB     = 0;
+bool prevReed = LOW;   // tracks reed state change
 
-int lightBaseline = LIGHT_NIGHT_BASELINE;
-int lastLightReading = 0;
+// ── ISR: flame DO fires LOW when flame detected ───────────────────
+void onFlame() {
+  flameFired = true;
+}
 
-// ── Buzzer patterns ─────────────────────────────────────────────────────────
-// 1 beep = door opened | 2 beeps = light | 3 beeps = overheat | 4 = flame/IR
+// ═════════════════════════════════════════════════════════════════
+void setup() {
+  Serial.begin(9600);
 
-void beepPattern(int count) {
-  for (int i = 0; i < count; i++) {
+  pinMode(PIN_FLAME_DO, INPUT);
+  pinMode(PIN_REED,     INPUT_PULLUP);
+  pinMode(PIN_BUZZER,   OUTPUT);
+  pinMode(PIN_LED_ALERT,  OUTPUT);
+  pinMode(PIN_LED_STATUS, OUTPUT);
+
+  // KY-026 DO goes LOW when flame detected → FALLING trigger
+  attachInterrupt(digitalPinToInterrupt(PIN_FLAME_DO), onFlame, FALLING);
+
+  bootSequence();
+  sendJSON("boot", "1", "0", "System online");
+  digitalWrite(PIN_LED_STATUS, HIGH);  // steady on = ready
+}
+
+// ═════════════════════════════════════════════════════════════════
+void loop() {
+  unsigned long now = millis();
+
+  // ── 1. FLAME DETECTION (KY-026 DO interrupt) ─────────────────
+  if (flameFired && canAlert(lastFlame, now)) {
+    flameFired = false;
+    lastFlame  = now;
+
+    // Read AO for intensity → convert to risk score
+    int aoVal    = analogRead(PIN_FLAME_AO);
+    // AO: 0 = strong flame, 1023 = no flame
+    // Map inverted: low AO = high score
+    int score    = map(aoVal, 1023, 0, 50, 99);
+    score        = constrain(score, 50, 99);
+
+    String msg = "Flame/heat detected. AO=" + String(aoVal) + " intensity=" + String(100 - (aoVal * 100 / 1023)) + "%";
+    sendJSON("flame", "1", String(score), msg);
+    buzzerAlert(3, true);   // 3 loud bursts
+  }
+  flameFired = false;  // clear any stray ISR calls
+
+  // ── 2. DOOR TAMPER (Reed switch) ─────────────────────────────
+  // With INPUT_PULLUP: magnet ON = pulled LOW, magnet OFF = HIGH
+  bool reedNow = digitalRead(PIN_REED);
+  if (reedNow == HIGH && prevReed == LOW && canAlert(lastReed, now)) {
+    // Transition LOW→HIGH = magnet just removed = tamper!
+    lastReed = now;
+    sendJSON("tamper", "1", "94", "Cabinet door opened — magnet removed");
+    buzzerAlert(5, true);   // 5 loud bursts = highest priority
+  }
+  prevReed = reedNow;
+
+  // ── 3. INTRUDER (LDR — cover = dark = person present) ────────
+  int ldrVal = analogRead(PIN_LDR);
+  if (ldrVal < LDR_DARK_THRESHOLD && canAlert(lastLDR, now)) {
+    lastLDR = now;
+    // Darker = higher score
+    int score = map(ldrVal, LDR_DARK_THRESHOLD, 0, 55, 85);
+    score = constrain(score, 55, 85);
+    String msg = "Motion/obstruction detected. LDR=" + String(ldrVal);
+    sendJSON("motion", "1", String(score), msg);
+    buzzerAlert(2, false);  // 2 short bursts = medium priority
+  }
+
+  // ── 4. HEARTBEAT every 30 sec ────────────────────────────────
+  if (now - lastHB > 30000UL) {
+    lastHB = now;
+    int ldr   = analogRead(PIN_LDR);
+    int flame = analogRead(PIN_FLAME_AO);
+    Serial.print("{\"type\":\"heartbeat\",\"node\":\"" NODE_ID "\",");
+    Serial.print("\"value\":\"1\",\"score\":0,");
+    Serial.print("\"ldr\":");   Serial.print(ldr);
+    Serial.print(",\"flame\":"); Serial.print(flame);
+    Serial.println("}");
+  }
+
+  delay(150);
+}
+
+// ═══════════════ HELPERS ═════════════════════════════════════════
+
+bool canAlert(unsigned long lastTime, unsigned long now) {
+  return (now - lastTime) > COOLDOWN_MS;
+}
+
+void sendJSON(String type, String value, String score, String msg) {
+  digitalWrite(PIN_LED_ALERT, HIGH);
+  Serial.print("{\"type\":\"");    Serial.print(type);
+  Serial.print("\",\"node\":\"");  Serial.print(NODE_ID);
+  Serial.print("\",\"location\":\""); Serial.print(LOCATION);
+  Serial.print("\",\"value\":\""); Serial.print(value);
+  Serial.print("\",\"score\":");   Serial.print(score);
+  Serial.print(",\"msg\":\"");     Serial.print(msg);
+  Serial.println("\"}");
+  delay(300);
+  digitalWrite(PIN_LED_ALERT, LOW);
+}
+
+void buzzerAlert(int bursts, bool loud) {
+  for (int i = 0; i < bursts; i++) {
+    digitalWrite(PIN_LED_ALERT, HIGH);
     digitalWrite(PIN_BUZZER, HIGH);
-    delay(120);
+    delay(loud ? 180 : 80);
     digitalWrite(PIN_BUZZER, LOW);
+    digitalWrite(PIN_LED_ALERT, LOW);
     delay(100);
   }
 }
 
-bool isNightHours() {
-  // Approximate night window 18:00–06:00 using millis buckets for demo;
-  // backend applies real time-of-day scoring. Optional RTC can replace this.
-  return true; // treat as night-sensitive for hackathon demo
-}
-
-float readObjectTempC() {
-  if (!mlxAvailable) {
-    // Simulation fallback when MLX90614 not wired — rises if pin A1 pulled
-    int sim = analogRead(A1);
-    return 25.0f + (sim / 1023.0f) * 60.0f;
+void bootSequence() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(PIN_LED_ALERT,  HIGH);
+    digitalWrite(PIN_LED_STATUS, LOW);
+    delay(180);
+    digitalWrite(PIN_LED_ALERT,  LOW);
+    digitalWrite(PIN_LED_STATUS, HIGH);
+    delay(180);
   }
-  return mlx.readObjectTempC();
-}
-
-void emitJson(const char* eventType, const char* severity, const char* message) {
-  float tempC = readObjectTempC();
-  int light = analogRead(PIN_LDR_ANALOG);
-  int flame = digitalRead(PIN_FLAME_DIGITAL);
-  int reed = digitalRead(PIN_REED_SWITCH);
-
-  Serial.print(F("{\"asset_id\":\"TRANSFORMER-001\",\"event\":\""));
-  Serial.print(eventType);
-  Serial.print(F("\",\"severity\":\""));
-  Serial.print(severity);
-  Serial.print(F("\",\"message\":\""));
-  Serial.print(message);
-  Serial.print(F("\",\"temp_c\":"));
-  Serial.print(tempC, 1);
-  Serial.print(F(",\"light_level\":"));
-  Serial.print(light);
-  Serial.print(F(",\"flame_detected\":"));
-  Serial.print(flame == FLAME_TRIGGER_LOW ? "true" : "false");
-  Serial.print(F(",\"door_open\":"));
-  Serial.print(reed == REED_DOOR_OPEN ? "true" : "false");
-  Serial.print(F(",\"maintenance_mode\":"));
-  Serial.print(maintenanceMode ? "true" : "false");
-  Serial.print(F(",\"alert_active\":"));
-  Serial.print(alertActive ? "true" : "false");
-  Serial.println(F("}"));
-}
-
-void handleSerialCommand() {
-  if (!Serial.available()) return;
-
-  String cmd = Serial.readStringUntil('\n');
-  cmd.trim();
-  cmd.toUpperCase();
-
-  if (cmd == "MAINTENANCE_ON") {
-    maintenanceMode = true;
-    alertActive = false;
-    digitalWrite(PIN_LED_ALERT, LOW);
-    emitJson("maintenance", "info", "Maintenance mode enabled — alerts suppressed");
-  } else if (cmd == "MAINTENANCE_OFF") {
-    maintenanceMode = false;
-    emitJson("maintenance", "info", "Maintenance mode disabled — monitoring active");
-  } else if (cmd == "CALIBRATE") {
-    lightBaseline = analogRead(PIN_LDR_ANALOG);
-    emitJson("calibration", "info", "Light baseline calibrated");
-  } else if (cmd == "PING") {
-    emitJson("heartbeat", "info", "Node online");
-  }
-}
-
-void setAlertLed(bool on) {
-  alertActive = on;
-  digitalWrite(PIN_LED_ALERT, on ? HIGH : LOW);
-}
-
-void setup() {
-  pinMode(PIN_REED_SWITCH, INPUT_PULLUP);
-  pinMode(PIN_FLAME_DIGITAL, INPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-  pinMode(PIN_LED_NORMAL, OUTPUT);
-  pinMode(PIN_LED_ALERT, OUTPUT);
-
-  digitalWrite(PIN_BUZZER, LOW);
-  digitalWrite(PIN_LED_ALERT, LOW);
-
-  Serial.begin(SERIAL_BAUD);
-  while (!Serial && millis() < 3000) { /* wait for USB serial */ }
-
-  Wire.begin();
-  if (mlx.begin()) {
-    mlxAvailable = true;
-  }
-
-  lightBaseline = analogRead(PIN_LDR_ANALOG);
-  lastLightReading = lightBaseline;
-  doorOpen = digitalRead(PIN_REED_SWITCH) == REED_DOOR_OPEN;
-
-  // Startup chirp
-  beepPattern(1);
-  emitJson("startup", "info", "SentinelAI node initialized");
-}
-
-void loop() {
-  handleSerialCommand();
-
-  // Normal LED slow blink
-  static unsigned long lastBlink = 0;
-  if (millis() - lastBlink > (alertActive ? 150 : 800)) {
-    lastBlink = millis();
-    digitalWrite(PIN_LED_NORMAL, !digitalRead(PIN_LED_NORMAL));
-  }
-
-  unsigned long now = millis();
-  if (now - lastReadMs < READ_INTERVAL_MS) return;
-  lastReadMs = now;
-
-  float tempC = readObjectTempC();
-  int light = analogRead(PIN_LDR_ANALOG);
-  int flame = digitalRead(PIN_FLAME_DIGITAL);
-  int reed = digitalRead(PIN_REED_SWITCH);
-  bool doorIsOpen = reed == REED_DOOR_OPEN;
-
-  // Periodic telemetry
-  emitJson("telemetry", "info", "Sensor reading");
-
-  if (maintenanceMode) {
-    lastLightReading = light;
-    doorOpen = doorIsOpen;
-    return;
-  }
-
-  // ── Door / reed switch ──────────────────────────────────────────────────
-  if (doorIsOpen != doorOpen && now - lastReedChangeMs > DEBOUNCE_MS) {
-    lastReedChangeMs = now;
-    doorOpen = doorIsOpen;
-    if (doorIsOpen) {
-      setAlertLed(true);
-      beepPattern(1);
-      emitJson("door_open", "high", "Cabinet door opened unexpectedly");
-    } else {
-      emitJson("door_closed", "info", "Cabinet door closed");
-    }
-  }
-
-  // ── Light spike (torch at night) ────────────────────────────────────────
-  int lightDelta = light - lightBaseline;
-  if (isNightHours() && lightDelta > LIGHT_SPIKE_DELTA && now - lastLightSpikeMs > 5000) {
-    lastLightSpikeMs = now;
-    setAlertLed(true);
-    beepPattern(2);
-    emitJson("light_intrusion", "high", "Unexpected light detected — possible intruder torch");
-  }
-  lastLightReading = light;
-
-  // ── Flame / IR module ───────────────────────────────────────────────────
-  if (flame == FLAME_TRIGGER_LOW && now - lastFlameAlertMs > 5000) {
-    lastFlameAlertMs = now;
-    setAlertLed(true);
-    beepPattern(4);
-    emitJson("flame_ir", "medium", "IR/flame sensor triggered — heat or bright IR source");
-  }
-
-  // ── Temperature ─────────────────────────────────────────────────────────
-  if (tempC >= TEMP_ALERT_C && now - lastTempAlertMs > 10000) {
-    lastTempAlertMs = now;
-    setAlertLed(true);
-    beepPattern(3);
-    emitJson("overheat", "critical", "Transformer surface temperature critical");
-  } else if (tempC >= TEMP_WARN_C && now - lastTempAlertMs > 15000) {
-    lastTempAlertMs = now;
-    emitJson("overheat_warn", "medium", "Transformer temperature elevated");
-  }
-
-  // Clear alert LED if all conditions normal
-  if (!doorIsOpen && lightDelta <= LIGHT_SPIKE_DELTA && flame != FLAME_TRIGGER_LOW && tempC < TEMP_WARN_C) {
-    setAlertLed(false);
-  }
+  digitalWrite(PIN_LED_STATUS, LOW);
 }
