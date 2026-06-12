@@ -324,3 +324,64 @@ Developed for the Gauteng G13 Hackathon.
 
 ### SentinelAI
 **Intelligent Infrastructure Protection System**
+
+---
+
+## Quick Start (Hackathon Demo)
+
+### Who does what?
+
+See **[TEAM.md](TEAM.md)** for the full 5-person split (3 hardware + 2 software) and the 5-minute demo script.
+
+Open **[component_map.html](component_map.html)** in a browser for the component inventory and pin map.
+
+### Run the full stack (one laptop)
+
+```bash
+# 1. Backend dependencies
+pip install -r requirements.txt
+
+# 2. Build dashboard
+cd frontend
+npm install
+npm run build
+cd ..
+
+# 3. Start server (serves API + dashboard on port 8000)
+python run.py
+```
+
+Open **http://127.0.0.1:8000** — use the demo buttons if Arduino is not connected.
+
+### With Arduino connected
+
+1. Upload `arduino/sentinel_node/sentinel_node.ino` (see `arduino/README.md`)
+2. Plug Arduino into the same laptop via USB
+3. Start with serial enabled (default):
+
+```bash
+python run.py
+```
+
+The backend auto-detects the COM port and ingests JSON from the serial monitor.
+
+### Dev mode (hot reload dashboard)
+
+```bash
+# Terminal 1
+python run.py
+
+# Terminal 2
+cd frontend && npm run dev
+```
+
+Dashboard: http://localhost:5173 · API docs: http://127.0.0.1:8000/docs
+
+### Sensor → alert mapping
+
+| Sensor | Threat | Buzzer |
+|--------|--------|--------|
+| Reed switch | Cabinet door opened | 1 beep |
+| LDR light | Torch / headlights at night | 2 beeps |
+| MLX90614 | Transformer overheating (>80°C) | 3 beeps |
+| Flame/IR module | Bright IR / heat source | 4 beeps |

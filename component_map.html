@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gauteng Hackathon — Component Map</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f5f5f0; padding: 20px; color: #2c2c2a; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #5f5e5a; margin-bottom: 20px; }
+  .section-title { font-size: 11px; font-weight: 500; color: #888780; text-transform: uppercase; letter-spacing: 0.07em; margin: 20px 0 10px; }
+  .card { background: #fff; border: 0.5px solid #d3d1c7; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; }
+  .card.have { border-left: 3px solid #1D9E75; }
+  .card.wire { border-left: 3px solid #BA7517; }
+  .card.missing { border-left: 3px solid #E24B4A; }
+  .card.dev { border-left: 3px solid #534AB7; }
+  .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .icon.green { background: #E1F5EE; }
+  .icon.amber { background: #FAEEDA; }
+  .icon.red { background: #FCEBEB; }
+  .icon.purple { background: #EEEDFE; }
+  .info { flex: 1; }
+  .name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .role { font-size: 12px; color: #5f5e5a; margin-bottom: 5px; }
+  .pin { font-size: 11px; background: #E6F1FB; color: #185FA5; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-right: 4px; margin-top: 2px; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 500; flex-shrink: 0; align-self: flex-start; }
+  .pill.have { background: #E1F5EE; color: #0F6E56; }
+  .pill.wire { background: #FAEEDA; color: #854F0B; }
+  .pill.missing { background: #FCEBEB; color: #A32D2D; }
+  .pill.dev { background: #EEEDFE; color: #3C3489; }
+  .legend { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5f5e5a; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  hr { border: none; border-top: 0.5px solid #d3d1c7; margin: 16px 0; }
+  .tip { background: #f1efe8; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #5f5e5a; margin-top: 8px; }
+  .tip strong { color: #2c2c2a; }
+</style>
+</head>
+<body>
+
+<h1>Component inventory & roles</h1>
+<p class="subtitle">Gauteng Infrastructure Theft Detection Node — Hackathon Team of 5</p>
+
+<div class="legend">
+  <div class="leg"><div class="dot" style="background:#1D9E75"></div> You have it</div>
+  <div class="leg"><div class="dot" style="background:#BA7517"></div> Have it — needs wiring</div>
+  <div class="leg"><div class="dot" style="background:#E24B4A"></div> Still needed</div>
+  <div class="leg"><div class="dot" style="background:#534AB7"></div> Software task</div>
+</div>
+
+<div class="section-title">Hardware team (3 members) — confirmed on the table</div>
+
+<div class="card have">
+  <div class="icon green">🔵</div>
+  <div class="info">
+    <p class="name">Arduino Uno</p>
+    <p class="role">The brain — reads all sensors, triggers buzzer and LED alerts, sends data over serial/WiFi</p>
+    <span class="pin">D2–D9 digital</span><span class="pin">A0–A3 analog</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card have">
+  <div class="icon green">🌡️</div>
+  <div class="info">
+    <p class="name">IR Temperature sensor (MLX90614 or similar)</p>
+    <p class="role">Detects transformer overheating without physical contact. Set threshold at ~80°C — above that, trigger alert.</p>
+    <span class="pin">I2C SDA/SCL</span><span class="pin">or A0 analog</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card have">
+  <div class="icon green">🔴</div>
+  <div class="info">
+    <p class="name">Flame / IR sensor module (red board)</p>
+    <p class="role">Detects unusual light and heat sources — thieves' flashlights at 2am, or fire near cables. Dual-use sensor.</p>
+    <span class="pin">D3 digital</span><span class="pin">A1 analog</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card have">
+  <div class="icon green">🔲</div>
+  <div class="info">
+    <p class="name">Reed switch module (magnetic door sensor)</p>
+    <p class="role">Detects when the cable compartment or transformer cabinet door opens unexpectedly. Glue magnet on door, module on frame. When magnet separates → alert fires.</p>
+    <span class="pin">D2 digital</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card wire">
+  <div class="icon amber">💡</div>
+  <div class="info">
+    <p class="name">LDR / Light sensor module (small black board)</p>
+    <p class="role">Detects sudden surge in ambient light — torchlight, car headlights at night. Works best when calibrated to baseline darkness at night.</p>
+    <span class="pin">A0 analog</span>
+  </div>
+  <span class="pill wire">Wire up</span>
+</div>
+
+<div class="card have">
+  <div class="icon green">🔔</div>
+  <div class="info">
+    <p class="name">Buzzer module</p>
+    <p class="role">Local audible alarm. Use different beep patterns: 1 beep = door opened, 2 beeps = light detected, 3 beeps = overheat.</p>
+    <span class="pin">D8 digital</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card have">
+  <div class="icon amber">🟡</div>
+  <div class="info">
+    <p class="name">Yellow LEDs ×2</p>
+    <p class="role">Visual status indicators. LED 1 = system normal (slow blink). LED 2 = alert active (fast blink). Need 220Ω resistors in series.</p>
+    <span class="pin">D9</span><span class="pin">D10</span>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<div class="card have">
+  <div class="icon green">⬛</div>
+  <div class="info">
+    <p class="name">Breadboard (large)</p>
+    <p class="role">Prototyping base — connects everything without soldering. Use the power rails for 5V and GND distribution.</p>
+  </div>
+  <span class="pill have">✓ Have</span>
+</div>
+
+<hr>
+<div class="section-title">Still needed — get these before the demo</div>
+
+<div class="card missing">
+  <div class="icon red">📡</div>
+  <div class="info">
+    <p class="name">ESP8266 WiFi module OR SIM800L GSM module</p>
+    <p class="role">Without this you cannot send alerts to the dashboard or SMS. Most critical missing piece. ESP8266 (~R30, uses WiFi). SIM800L sends real SMS anywhere with a SIM card. Get one ASAP.</p>
+  </div>
+  <span class="pill missing">⚠ Critical</span>
+</div>
+
+<div class="card missing">
+  <div class="icon red">🔌</div>
+  <div class="info">
+    <p class="name">Jumper wires (male-to-male + male-to-female)</p>
+    <p class="role">Need a full set (20–40 wires) to connect all sensor modules to the Arduino via the breadboard.</p>
+  </div>
+  <span class="pill missing">⚠ Needed</span>
+</div>
+
+<div class="card missing">
+  <div class="icon red">⚡</div>
+  <div class="info">
+    <p class="name">220Ω resistors ×4</p>
+    <p class="role">Current limiting for LEDs. Without these the LEDs will burn out immediately.</p>
+  </div>
+  <span class="pill missing">⚠ Needed</span>
+</div>
+
+<hr>
+<div class="section-title">Software team (2 members) — parallel tasks</div>
+
+<div class="card dev">
+  <div class="icon purple">💻</div>
+  <div class="info">
+    <p class="name">Dashboard web app</p>
+    <p class="role">Map of Gauteng with alert pins. Real-time sensor readings (temp, light level, door status). Alert log with timestamps. Status indicator: NORMAL / ALERT / MAINTENANCE MODE.</p>
+  </div>
+  <span class="pill dev">Dev task</span>
+</div>
+
+<div class="card dev">
+  <div class="icon purple">🐍</div>
+  <div class="info">
+    <p class="name">Serial listener / alert backend (Python)</p>
+    <p class="role">Reads Arduino serial output over USB, parses sensor events, pushes to dashboard. If no WiFi module: this IS your connectivity. Runs on a laptop during the demo.</p>
+  </div>
+  <span class="pill dev">Dev task</span>
+</div>
+
+<div class="card dev">
+  <div class="icon purple">📱</div>
+  <div class="info">
+    <p class="name">Notification integration</p>
+    <p class="role">Sends email or WhatsApp alert to a simulated "Eskom control room" number when alert fires. Use Twilio free tier or SMTP email. Judges love seeing a real phone buzz.</p>
+  </div>
+  <span class="pill dev">Dev task</span>
+</div>
+
+<hr>
+<div class="tip">
+  <strong>Hackathon shortcut:</strong> If you can't source a WiFi/GSM module in time, connect Arduino via USB to a laptop running a Python script (<code>pyserial</code> library). The script reads the serial port, logs the event, and POSTs to your web dashboard. Same demo effect, no extra hardware needed — judges won't know the difference.
+</div>
+
+</body>
+</html>
